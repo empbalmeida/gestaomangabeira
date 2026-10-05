@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Controle de Vendas</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f5f7;--cd:#fff;--tx:#1b2430;--mu:#6b7686;--bd:#dde1e7;--pr:#1f3a5f;--ok:#0a7a3d;--okb:#d9f2e3;--no:#b3261e;--nob:#fde3e1;--pa:#80620a;--pab:#fff1c2;--re:#1f3a5f;--reb:#dbe8f8}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--cd:#1c222b;--tx:#e8ecf1;--mu:#98a3b3;--bd:#2d3643;--pr:#5b8ed6;--ok:#6fd49a;--okb:#16382a;--no:#ff9b94;--nob:#43201e;--pa:#f0cf6b;--pab:#40340f;--re:#a9c8f5;--reb:#1f3350}}
+:root[data-theme="dark"]{--bg:#12161c;--cd:#1c222b;--tx:#e8ecf1;--mu:#98a3b3;--bd:#2d3643;--pr:#5b8ed6;--ok:#6fd49a;--okb:#16382a;--no:#ff9b94;--nob:#43201e;--pa:#f0cf6b;--pab:#40340f;--re:#a9c8f5;--reb:#1f3350}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 Arial,Helvetica,sans-serif}
+.w{max-width:1000px;margin:0 auto;padding:14px}
+h1{font-size:20px;margin:0;color:var(--pr)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.tabs{display:flex;gap:6px;margin:8px 0 12px}
+button,input,select{font:inherit;color:var(--tx)}
+.tb{padding:8px 14px;border:1px solid var(--bd);background:var(--cd);border-radius:8px;cursor:pointer}
+.tb.on{background:var(--pr);color:#fff;border-color:var(--pr)}
+.bt{padding:8px 14px;border:0;border-radius:8px;background:var(--pr);color:#fff;cursor:pointer;font-weight:bold}
+.bt.g{background:transparent;color:var(--tx);border:1px solid var(--bd);font-weight:normal}
+.bt.d{background:var(--no);color:#fff}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-bottom:12px}
+.c{background:var(--cd);border:1px solid var(--bd);border-radius:10px;padding:10px 12px}
+.c small{color:var(--mu);display:block}.c b{font-size:18px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.bx{background:var(--cd);border:1px solid var(--bd);border-radius:10px;padding:10px;overflow-x:auto}
+.bx h3{margin:0 0 6px;font-size:14px;color:var(--pr)}
+table{border-collapse:collapse;width:100%;min-width:max-content}
+th{background:var(--pr);color:#fff;text-align:left;padding:7px 8px;font-size:12px;white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid var(--bd);white-space:nowrap}
+tr.r{cursor:pointer}tr.r:hover td{background:var(--bg)}
+.n{text-align:right}
+.s{padding:2px 8px;border-radius:10px;font-size:12px;font-weight:bold}
+.Recebido{background:var(--okb);color:var(--ok)}.Atrasado{background:var(--nob);color:var(--no)}.Parcial{background:var(--pab);color:var(--pa)}.Areceber{background:var(--reb);color:var(--re)}
+.fl{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
+.fl input,.fl select,.f input,.f select{padding:7px 8px;border:1px solid var(--bd);border-radius:8px;background:var(--cd)}
+dialog{border:1px solid var(--bd);border-radius:12px;background:var(--cd);color:var(--tx);width:min(560px,94vw);padding:16px;max-height:90vh;overflow:auto}
+dialog::backdrop{background:#0008}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.f label{display:flex;flex-direction:column;font-size:12px;color:var(--mu);gap:3px}
+.f .full{grid-column:1/-1}
+.pr{display:grid;grid-template-columns:28px 1fr 1fr 1fr 28px;gap:4px;align-items:center;margin-bottom:4px}
+.pr input{min-width:0;width:100%}
+.ft{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap}
+.mu{color:var(--mu);font-size:12px}
+</style></head><body><div class="w">
+<div class="top"><h1>💼 Controle de Vendas</h1>
+<div class="fl" style="margin:0"><span class="mu" id="sync"></span><button class="bt g" id="exp">Exportar CSV</button><button class="bt g" id="bk">Backup</button><button class="bt g" id="rs">Restaurar</button><input type="file" id="fi" accept=".json" hidden><button class="bt" id="new">+ Nova venda</button></div></div>
+<div class="tabs"><button class="tb on" data-t="resumo">Resumo</button><button class="tb" data-t="vendas">Vendas</button></div>
+<div id="v"></div>
+<dialog id="dlg"><div id="form"></div></dialog>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,'0');
+const D=new Date(),today=D.getFullYear()+'-'+pad(D.getMonth()+1)+'-'+pad(D.getDate());
+const month0=today.slice(0,7)+'-01';
+const money=n=>(n||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const fd=s=>s?s.split('-').reverse().join('/'):'';
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S={vendas:[]},ref=null,tab='resumo',filt='Todas',q='',cur=null;
+
+function entradaOk(v){return v.parcelada?(v.parc.length>0&&v.parc.every(p=>p.paga)):!!v.entradaPaga}
+function entradaAlgo(v){return v.parcelada?v.parc.some(p=>p.paga):!!v.entradaPaga}
+function status(v){
+  if(v.contratoPago&&entradaOk(v))return 'Recebido';
+  if(v.receber&&v.receber<today)return 'Atrasado';
+  if(v.contratoPago||entradaAlgo(v))return 'Parcial';
+  return 'A receber';
+}
+const badge=s=>`<span class="s ${s.replace(' ','')}">${s}</span>`;
+
+function sync(t){$('#sync').textContent=t}
+function save(){
+  try{localStorage.setItem('cv',JSON.stringify(S));sync('Salvo neste navegador ✓')}
+  catch(e){sync('Não consegui salvar — use Backup')}
+}
+function norm(){S.vendas=(S.vendas||[]).map(v=>({parc:[],...v,parc:v.parc||[]}))}
+function init(){
+  try{const r=localStorage.getItem('cv');if(r)S=JSON.parse(r)}catch(e){}
+  norm();render();sync('Dados salvos neste navegador');
+}
+function baixar(nome,txt,tipo){
+  const u=URL.createObjectURL(new Blob([txt],{type:tipo}));
+  const a=document.createElement('a');a.href=u;a.download=nome;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),1000);
+}
+
+function sum(a){return a.reduce((t,v)=>t+(+v.comissao||0),0)}
+function render(){tab==='resumo'?resumo():vendas()}
+
+function resumo(){
+  const V=S.vendas.map(v=>({...v,st:status(v)}));
+  const tot=sum(V),rec=sum(V.filter(v=>v.st==='Recebido')),atr=sum(V.filter(v=>v.st==='Atrasado'));
+  const cards=[['Vendas',V.length],['Comissão total',money(tot)],['Recebida',money(rec)],['Em aberto',money(tot-rec)],['Em atraso',money(atr)]]
+    .map(c=>`<div class="c"><small>${c[0]}</small><b>${c[1]}</b></div>`).join('');
+  const tipos=['Na planta','Lote','Pronto'].map(t=>{const a=V.filter(v=>v.tipo===t);return `<tr><td>${t}</td><td class="n">${a.length}</td><td class="n">${money(sum(a))}</td></tr>`}).join('');
+  const emps=[...new Set(V.map(v=>v.emp).filter(Boolean))].sort().map(e=>{const a=V.filter(v=>v.emp===e);return `<tr><td>${esc(e)}</td><td class="n">${a.length}</td><td class="n">${money(sum(a))}</td><td class="n">${money(sum(a.filter(v=>v.st==='Recebido')))}</td></tr>`}).join('');
+  const open=V.filter(v=>v.st!=='Recebido'&&v.receber);
+  let meses='',y=D.getFullYear(),m=D.getMonth();
+  const late=sum(open.filter(v=>v.receber<month0));
+  for(let i=0;i<12;i++){const k=y+'-'+pad(m+1);const val=sum(open.filter(v=>v.receber.slice(0,7)===k));
+    meses+=`<tr><td>${pad(m+1)}/${y}</td><td class="n">${money(val)}</td></tr>`;m++;if(m>11){m=0;y++}}
+  const parc=[];V.forEach(v=>v.parc.forEach((p,i)=>{if(!p.paga)parc.push({...p,n:i+1,v})}));
+  parc.sort((a,b)=>(a.prevista||'9').localeCompare(b.prevista||'9'));
+  const pr=parc.slice(0,8).map(p=>`<tr class="r" data-id="${p.v.id}"><td>${fd(p.prevista)||'—'}</td><td>${esc(p.v.cliente||p.v.emp)}</td><td>${p.n}ª</td><td class="n">${money(p.valor)}</td><td>${p.prevista&&p.prevista<today?badge('Atrasado'):''}</td></tr>`).join('');
+  $('#v').innerHTML=`<div class="cards">${cards}</div><div class="g2">
+  <div class="bx"><h3>A receber por mês</h3><table><tr><th>Mês</th><th class="n">Comissão</th></tr><tr><td>Atrasadas</td><td class="n">${money(late)}</td></tr>${meses}</table></div>
+  <div class="bx"><h3>Próximas parcelas da entrada</h3><table><tr><th>Data</th><th>Venda</th><th>Parc.</th><th class="n">Valor</th><th></th></tr>${pr||'<tr><td colspan="5" class="mu">Nenhuma parcela pendente</td></tr>'}</table></div>
+  <div class="bx"><h3>Por tipo</h3><table><tr><th>Tipo</th><th class="n">Vendas</th><th class="n">Comissão</th></tr>${tipos}</table></div>
+  <div class="bx"><h3>Por empreendimento</h3><table><tr><th>Empreendimento</th><th class="n">Vendas</th><th class="n">Comissão</th><th class="n">Recebida</th></tr>${emps||'<tr><td colspan="4" class="mu">Sem vendas ainda</td></tr>'}</table></div></div>`;
+  $('#v').querySelectorAll('tr.r').forEach(r=>r.onclick=()=>edit(r.dataset.id));
+}
+
+function vendas(){
+  if(!$('#fl')){$('#v').innerHTML=`<div class="fl" id="fl"><input id="q" placeholder="Buscar cliente ou empreendimento" style="flex:1;min-width:180px"><select id="sf"><option>Todas</option><option>A receber</option><option>Parcial</option><option>Atrasado</option><option>Recebido</option></select></div><div class="bx" id="tb"></div>`;
+    $('#q').oninput=e=>{q=e.target.value.toLowerCase();rows()};$('#sf').onchange=e=>{filt=e.target.value;rows()}}
+  $('#q').value=q;$('#sf').value=filt;rows();
+}
+function rows(){
+  const L=S.vendas.map(v=>({...v,st:status(v)})).filter(v=>(filt==='Todas'||v.st===filt)&&((v.cliente||'')+(v.emp||'')).toLowerCase().includes(q))
+    .sort((a,b)=>(a.receber||'9').localeCompare(b.receber||'9'));
+  const ent=v=>v.parcelada?`${v.parc.filter(p=>p.paga).length}/${v.parc.length} parcelas`:(fd(v.entradaPaga)||'—');
+  $('#tb').innerHTML=`<table><tr><th>Empreendimento</th><th>Cliente</th><th>Tipo</th><th class="n">Comissão</th><th>A receber</th><th>Contrato pago</th><th>Entrada</th><th>Situação</th></tr>`+
+    (L.map(v=>`<tr class="r" data-id="${v.id}"><td>${esc(v.emp)}</td><td>${esc(v.cliente)}</td><td>${esc(v.tipo)}</td><td class="n">${money(v.comissao)}</td><td>${fd(v.receber)||'—'}</td><td>${fd(v.contratoPago)||'—'}</td><td>${ent(v)}</td><td>${badge(v.st)}</td></tr>`).join('')||'<tr><td colspan="8" class="mu">Nenhuma venda. Clique em “+ Nova venda”.</td></tr>')+'</table>';
+  $('#tb').querySelectorAll('tr.r').forEach(r=>r.onclick=()=>edit(r.dataset.id));
+}
+
+function edit(id){
+  cur=id?JSON.parse(JSON.stringify(S.vendas.find(v=>v.id===id))):{id:'v'+Date.now(),emp:'',cliente:'',tipo:'Lote',comissao:'',receber:'',contratoPago:'',parcelada:false,entradaPaga:'',parc:[],novo:true};
+  form();$('#dlg').showModal();
+}
+function form(){
+  const v=cur,emps=[...new Set(S.vendas.map(x=>x.emp).filter(Boolean))];
+  $('#form').innerHTML=`<h3 style="margin:0 0 10px;color:var(--pr)">${v.novo?'Nova venda':'Editar venda'}</h3><div class="f">
+  <label class="full">Empreendimento<input id="emp" list="el" value="${esc(v.emp)}"><datalist id="el">${emps.map(e=>`<option value="${esc(e)}">`).join('')}</datalist></label>
+  <label>Cliente<input id="cli" value="${esc(v.cliente)}"></label>
+  <label>Tipo<select id="tipo">${['Na planta','Lote','Pronto'].map(t=>`<option ${t===v.tipo?'selected':''}>${t}</option>`).join('')}</select></label>
+  <label>Comissão (R$)<input id="com" type="number" step="0.01" value="${v.comissao}"></label>
+  <label>Data a receber<input id="rec" type="date" value="${v.receber}"></label>
+  <label>Data do contrato pago<input id="ctp" type="date" value="${v.contratoPago}"></label>
+  <label>Entrada parcelada?<select id="par"><option value="n" ${v.parcelada?'':'selected'}>Não</option><option value="s" ${v.parcelada?'selected':''}>Sim</option></select></label>
+  ${v.parcelada?'':`<label>Data da entrada paga<input id="enp" type="date" value="${v.entradaPaga}"></label>`}
+  </div>
+  ${v.parcelada?`<div style="margin-top:10px"><div class="mu" style="margin-bottom:4px">Parcelas da entrada: valor · data prevista · data paga</div>${v.parc.map((p,i)=>`<div class="pr"><span class="mu">${i+1}ª</span><input type="number" step="0.01" data-k="valor" data-i="${i}" value="${p.valor??''}"><input type="date" data-k="prevista" data-i="${i}" value="${p.prevista||''}"><input type="date" data-k="paga" data-i="${i}" value="${p.paga||''}"><button class="bt g" data-x="${i}" style="padding:4px">✕</button></div>`).join('')}<button class="bt g" id="ap">+ Parcela</button></div>`:''}
+  <div class="ft">${v.novo?'':'<button class="bt d" id="del">Excluir</button>'}<button class="bt g" id="can">Cancelar</button><button class="bt" id="ok">Salvar</button></div>`;
+  $('#par').onchange=()=>{grab();cur.parcelada=$('#par').value==='s';if(cur.parcelada&&!cur.parc.length)cur.parc.push({valor:'',prevista:'',paga:''});form()};
+  if($('#ap'))$('#ap').onclick=()=>{grab();cur.parc.push({valor:'',prevista:'',paga:''});form()};
+  $('#form').querySelectorAll('[data-x]').forEach(b=>b.onclick=()=>{grab();cur.parc.splice(+b.dataset.x,1);form()});
+  $('#can').onclick=()=>$('#dlg').close();
+  if($('#del'))$('#del').onclick=()=>{if(confirm('Excluir esta venda?')){S.vendas=S.vendas.filter(x=>x.id!==cur.id);save();$('#dlg').close();render()}};
+  $('#ok').onclick=()=>{grab();delete cur.novo;const i=S.vendas.findIndex(x=>x.id===cur.id);i<0?S.vendas.push(cur):S.vendas[i]=cur;save();$('#dlg').close();render()};
+}
+function grab(){
+  const v=cur;v.emp=$('#emp').value.trim();v.cliente=$('#cli').value.trim();v.tipo=$('#tipo').value;
+  v.comissao=parseFloat($('#com').value)||0;v.receber=$('#rec').value;v.contratoPago=$('#ctp').value;
+  v.parcelada=$('#par').value==='s';if($('#enp'))v.entradaPaga=$('#enp').value;
+  $('#form').querySelectorAll('[data-k]').forEach(i=>{const p=v.parc[+i.dataset.i];p[i.dataset.k]=i.dataset.k==='valor'?(i.value===''?'':parseFloat(i.value)):i.value});
+}
+
+document.querySelectorAll('.tb').forEach(b=>b.onclick=()=>{tab=b.dataset.t;document.querySelectorAll('.tb').forEach(x=>x.classList.toggle('on',x===b));render()});
+$('#new').onclick=()=>edit();
+$('#exp').onclick=async()=>{
+  const h=['Empreendimento','Cliente','Tipo','Comissão','Data a receber','Contrato pago','Entrada parcelada','Entrada paga','Parcelas','Situação'];
+  const c=s=>'"'+String(s??'').replace(/"/g,'""')+'"';
+  const rows=S.vendas.map(v=>[v.emp,v.cliente,v.tipo,String(v.comissao).replace('.',','),fd(v.receber),fd(v.contratoPago),v.parcelada?'Sim':'Não',v.parcelada?'':fd(v.entradaPaga),v.parcelada?v.parc.map((p,i)=>`${i+1}ª ${fd(p.prevista)}${p.paga?' (paga '+fd(p.paga)+')':''}`).join(' | '):'',status(v)].map(c).join(';'));
+  const csv='\ufeff'+[h.map(c).join(';'),...rows].join('\n');
+  baixar('vendas.csv',csv,'text/csv;charset=utf-8');
+};
+$('#bk').onclick=()=>baixar('backup-vendas-'+today+'.json',JSON.stringify(S),'application/json');
+$('#rs').onclick=()=>$('#fi').click();
+$('#fi').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.vendas))throw 0;
+    if(confirm('Isso substitui as vendas atuais pelas do backup. Continuar?')){S=d;norm();save();render()}}
+    catch(x){alert('Arquivo de backup inválido.')}e.target.value=''};r.readAsText(f)};
+init();
+</script></body></html>
